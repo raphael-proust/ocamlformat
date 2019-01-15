@@ -39,6 +39,7 @@ type t =
   ; margin: int
   ; max_iters: int
   ; module_item_spacing: [`Compact | `Sparse]
+  ; monad_operators: string list
   ; ocp_indent_compat: bool
   ; parens_ite: bool
   ; parens_tuple: [`Always | `Multi_line_only]
@@ -149,6 +150,16 @@ module C : sig
   val flag : default:bool -> bool option_decl
 
   val int : default:int -> docv:string -> int option_decl
+
+  val from_string :
+       default:'a
+    -> name:string
+    -> doc:string
+    -> (config -> 'a -> config)
+    -> (config -> 'a)
+    -> (string -> 'a)
+    -> ('a -> string)
+    -> 'a t
 
   val default : 'a t -> 'a
 
@@ -347,6 +358,37 @@ end = struct
     let opt =
       { names
       ; parse
+      ; update
+      ; cmdline_get
+      ; allow_inline
+      ; default
+      ; to_string
+      ; get_value
+      ; from }
+    in
+    store := Pack opt :: !store ;
+    opt
+
+  let from_string ~default:(default:'a) ~name:(name:string) ~doc
+        (update: config -> 'a -> config)
+        (get_value: config -> 'a)
+        (of_string: string -> 'a)
+        (to_string: 'a -> string)
+    : 'a t=
+    let open Cmdliner in
+    let names = [name] in
+    let section = `Formatting in
+    let allow_inline = Poly.(section = `Formatting) in
+    let doc = generated_flag_doc ~allow_inline ~doc ~section in
+    let docs = section_name section in
+    let of_string s = Ok (of_string s) in
+    let print fmt v = Format.fprintf fmt "%s" (to_string v) in
+    let term = Arg.(value & opt (conv (of_string, print)) default & info names ~doc ~docs) in
+    let r = mk ~default term in
+    let cmdline_get () = Some !r in
+    let opt =
+      { names
+      ; parse= of_string
       ; update
       ; cmdline_get
       ; allow_inline
@@ -847,6 +889,20 @@ module Formatting = struct
       (fun conf x -> {conf with module_item_spacing= x})
       (fun conf -> conf.module_item_spacing)
 
+  let monad_operators =
+    let default = [] in
+    let doc = "Space-separated list of syntactic constructs used for monads' \
+               binds and maps." in
+    let name = "monad-operators" in
+    C.from_string
+      ~default
+      ~name
+      ~doc
+      (fun conf monad_operators -> {conf with monad_operators})
+      (fun conf -> conf.monad_operators)
+      (String.split ~on:' ')
+      (String.concat ~sep:" ")
+
   let ocp_indent_compat =
     let doc =
       "Attempt to generate output which does not change (much) when \
@@ -987,6 +1043,7 @@ module Formatting = struct
     C.flag ~default ~names ~doc ~section
       (fun conf wrap_fun_args -> {conf with wrap_fun_args})
       (fun conf -> conf.wrap_fun_args)
+
 end
 
 (* Flags that can be modified in the config file that don't affect
@@ -1224,6 +1281,7 @@ let default_profile =
   ; margin= C.default Formatting.margin
   ; max_iters= C.default max_iters
   ; module_item_spacing= C.default Formatting.module_item_spacing
+  ; monad_operators= []
   ; ocp_indent_compat= C.default Formatting.ocp_indent_compat
   ; parens_ite= C.default Formatting.parens_ite
   ; parens_tuple= C.default Formatting.parens_tuple
@@ -1305,6 +1363,7 @@ let janestreet_profile =
   ; margin= 90
   ; max_iters= default_profile.max_iters
   ; module_item_spacing= `Compact
+  ; monad_operators= []
   ; ocp_indent_compat= true
   ; parens_ite= true
   ; parens_tuple= `Multi_line_only
