@@ -160,6 +160,9 @@ OPTIONS (CODE FORMATTING STYLE)
            Control whether or not to indicate nested or-pattern using
            indentation.
 
+       --no-lonely-in
+           Style for let-in.
+
        --no-wrap-fun-args
            Style for function call and function definition.
 

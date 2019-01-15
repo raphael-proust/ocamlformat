@@ -50,7 +50,8 @@ type t =
   ; space_around_collection_expressions: bool
   ; type_decl: [`Compact | `Sparse]
   ; wrap_comments: bool
-  ; wrap_fun_args: bool }
+  ; wrap_fun_args: bool
+  ; lonely_in: bool }
 
 module Fpath = struct
   include Fpath
@@ -985,6 +986,15 @@ module Formatting = struct
     C.flag ~default ~names ~doc ~section
       (fun conf wrap_fun_args -> {conf with wrap_fun_args})
       (fun conf -> conf.wrap_fun_args)
+
+let lonely_in =
+  let default = true in
+  let doc = "Style for let-in." in
+  let names = ["lonely-in"] in
+  C.flag ~default ~names ~doc ~section
+    (fun conf lonely_in -> {conf with lonely_in})
+    (fun conf -> conf.lonely_in)
+
 end
 
 (* Flags that can be modified in the config file that don't affect
@@ -1234,7 +1244,8 @@ let default_profile =
       C.default Formatting.space_around_collection_expressions
   ; type_decl= C.default Formatting.type_decl
   ; wrap_comments= C.default Formatting.wrap_comments
-  ; wrap_fun_args= C.default Formatting.wrap_fun_args }
+  ; wrap_fun_args= C.default Formatting.wrap_fun_args 
+  ; lonely_in = C.default Formatting.lonely_in }
 
 let compact_profile =
   { default_profile with
@@ -1253,7 +1264,8 @@ let compact_profile =
   ; single_case= `Compact
   ; space_around_collection_expressions= false
   ; type_decl= `Compact
-  ; wrap_fun_args= true }
+  ; wrap_fun_args= true 
+  ; lonely_in = true }
 
 let sparse_profile =
   { default_profile with
@@ -1314,7 +1326,8 @@ let janestreet_profile =
   ; space_around_collection_expressions= true
   ; type_decl= `Sparse
   ; wrap_comments= false
-  ; wrap_fun_args= false }
+  ; wrap_fun_args= false 
+  ; lonely_in= true }
 
 let selected_profile_ref = ref (Some default_profile)
 

@@ -55,7 +55,8 @@ type t =
   ; space_around_collection_expressions: bool
   ; type_decl: [`Compact | `Sparse]
   ; wrap_comments: bool  (** Wrap comments at margin. *)
-  ; wrap_fun_args: bool }
+  ; wrap_fun_args: bool
+  ; lonely_in: bool }
 
 type 'a input = {kind: 'a; name: string; file: string; conf: t}
 

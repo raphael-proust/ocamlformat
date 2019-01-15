@@ -1975,7 +1975,10 @@ and fmt_expression c ?(box = true) ?epi ?eol ?parens ?(indent_wrap = 0) ?ext
                       ?ext:(if first then ext else None)
                       ctx binding
                       ~in_:(fun indent ->
-                        fmt_if_k last (break 1 (-indent) $ fmt "in") )
+                        fmt_if_k last
+                          (fmt_or_k  c.conf.lonely_in
+                             (break 1 (-indent) $ fmt "in")
+                             (fmt " in")))
                     $ fmt_if (not last)
                         ( match c.conf.let_and with
                         | `Sparse -> "@;<1000 0>"
@@ -2612,7 +2615,10 @@ and fmt_class_expr c ?eol ?(box = true) ({ast= exp} as xexp) =
                       ?ext:(if first then None else None)
                       ctx binding
                       ~in_:(fun indent ->
-                        fmt_if_k last (break 1 (-indent) $ fmt "in") )
+                fmt_if_k last
+                          (fmt_or_k  c.conf.lonely_in
+                             (break 1 (-indent) $ fmt "in")
+                             (fmt " in")))
                     $ fmt_if (not last)
                         ( match c.conf.let_and with
                         | `Sparse -> "@;<1000 0>"
