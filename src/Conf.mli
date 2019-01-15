@@ -56,7 +56,8 @@ type t =
   ; type_decl: [`Compact | `Sparse]
   ; wrap_comments: bool  (** Wrap comments at margin. *)
   ; wrap_fun_args: bool
-  ; lonely_in: bool }
+  ; lonely_in: bool
+  ; monad_operators: string list }
 
 type 'a input = {kind: 'a; name: string; file: string; conf: t}
 

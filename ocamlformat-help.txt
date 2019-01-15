@@ -146,6 +146,10 @@ OPTIONS (CODE FORMATTING STYLE)
            lines between one-liners of similar sorts. The default value is
            sparse.
 
+       --monad-operators=VAL
+           Space-separated list of syntactic constructs used for monads'
+           binds and maps.
+
        --no-break-infix-before-func
            Break infix operators whose right arguments are anonymous
            functions specially: do not break after the operator so that the

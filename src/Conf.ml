@@ -51,7 +51,8 @@ type t =
   ; type_decl: [`Compact | `Sparse]
   ; wrap_comments: bool
   ; wrap_fun_args: bool
-  ; lonely_in: bool }
+  ; lonely_in: bool
+  ; monad_operators: string list }
 
 module Fpath = struct
   include Fpath
@@ -150,6 +151,16 @@ module C : sig
   val flag : default:bool -> bool option_decl
 
   val int : default:int -> docv:string -> int option_decl
+
+  val from_string :
+       default:'a
+    -> name:string
+    -> doc:string
+    -> (config -> 'a -> config)
+    -> (config -> 'a)
+    -> (string -> 'a)
+    -> ('a -> string)
+    -> 'a t
 
   val default : 'a t -> 'a
 
@@ -346,6 +357,37 @@ end = struct
     let opt =
       { names
       ; parse
+      ; update
+      ; cmdline_get
+      ; allow_inline
+      ; default
+      ; to_string
+      ; get_value
+      ; from }
+    in
+    store := Pack opt :: !store ;
+    opt
+
+  let from_string ~default:(default:'a) ~name:(name:string) ~doc
+        (update: config -> 'a -> config)
+        (get_value: config -> 'a)
+        (of_string: string -> 'a)
+        (to_string: 'a -> string)
+    : 'a t=
+    let open Cmdliner in
+    let names = [name] in
+    let section = `Formatting in
+    let allow_inline = Poly.(section = `Formatting) in
+    let doc = generated_flag_doc ~allow_inline ~doc ~section in
+    let docs = section_name section in
+    let of_string s = Ok (of_string s) in
+    let print fmt v = Format.fprintf fmt "%s" (to_string v) in
+    let term = Arg.(value & opt (conv (of_string, print)) default & info names ~doc ~docs) in
+    let r = mk ~default term in
+    let cmdline_get () = Some !r in
+    let opt =
+      { names
+      ; parse= of_string
       ; update
       ; cmdline_get
       ; allow_inline
@@ -995,6 +1037,21 @@ module Formatting = struct
       (fun conf lonely_in -> {conf with lonely_in})
       (fun conf -> conf.lonely_in)
 
+  let monad_operators =
+    let default = [] in
+    let doc = "Space-separated list of syntactic constructs used for monads' \
+               binds and maps." in
+    let name = "monad-operators" in
+    C.from_string
+      ~default
+      ~name
+      ~doc
+      (fun conf monad_operators -> {conf with monad_operators})
+      (fun conf -> conf.monad_operators)
+      (String.split ~on:' ')
+      (String.concat ~sep:" ")
+
+
 end
 
 (* Flags that can be modified in the config file that don't affect
@@ -1245,7 +1302,8 @@ let default_profile =
   ; type_decl= C.default Formatting.type_decl
   ; wrap_comments= C.default Formatting.wrap_comments
   ; wrap_fun_args= C.default Formatting.wrap_fun_args 
-  ; lonely_in = C.default Formatting.lonely_in }
+  ; lonely_in = C.default Formatting.lonely_in
+  ; monad_operators= [] }
 
 let compact_profile =
   { default_profile with
@@ -1327,7 +1385,8 @@ let janestreet_profile =
   ; type_decl= `Sparse
   ; wrap_comments= false
   ; wrap_fun_args= false 
-  ; lonely_in= true }
+  ; lonely_in= true
+  ; monad_operators= [] }
 
 let selected_profile_ref = ref (Some default_profile)
 
