@@ -987,13 +987,13 @@ module Formatting = struct
       (fun conf wrap_fun_args -> {conf with wrap_fun_args})
       (fun conf -> conf.wrap_fun_args)
 
-let lonely_in =
-  let default = true in
-  let doc = "Style for let-in." in
-  let names = ["lonely-in"] in
-  C.flag ~default ~names ~doc ~section
-    (fun conf lonely_in -> {conf with lonely_in})
-    (fun conf -> conf.lonely_in)
+  let lonely_in =
+    let default = true in
+    let doc = "Style for let-in." in
+    let names = ["lonely-in"] in
+    C.flag ~default ~names ~doc ~section
+      (fun conf lonely_in -> {conf with lonely_in})
+      (fun conf -> conf.lonely_in)
 
 end
 
