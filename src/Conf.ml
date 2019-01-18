@@ -383,9 +383,9 @@ end = struct
     let docs = section_name section in
     let of_string s = Ok (of_string s) in
     let print fmt v = Format.fprintf fmt "%s" (to_string v) in
-    let term = Arg.(value & opt (conv (of_string, print)) default & info names ~doc ~docs) in
-    let r = mk ~default term in
-    let cmdline_get () = Some !r in
+    let term = Arg.(value & opt (some & conv (of_string, print)) None & info names ~doc ~docs) in
+    let r = mk ~default:None term in
+    let cmdline_get () = !r in
     let opt =
       { names
       ; parse= of_string
@@ -1515,15 +1515,14 @@ let parse_line config ~from s =
     | None -> s
   in
   let s = String.strip s in
-  match String.split ~on:'=' s with
-  | [] | [""] -> Ok config
-  | [name; value] ->
+  match String.lsplit2 ~on:'=' s with
+  | Some (name, value) ->
       let name = String.strip name in
       let value = String.strip value in
       if List.Assoc.mem ocp_indent_options ~equal:String.equal name then
         update_ocp_indent_option ~config ~from ~name ~value
       else update ~config ~from ~name ~value
-  | [s] -> (
+  | None -> (
     match
       ( List.filter (String.split ~on:' ' s) ~f:(fun s ->
             not (String.is_empty s) )
@@ -1552,7 +1551,6 @@ let parse_line config ~from s =
             update_many ~config ~from ocp_indent_janestreet_profile )
     | [name], _ -> update ~config ~from ~name ~value:"true"
     | _ -> Error (`Malformed s) )
-  | _ -> Error (`Malformed s)
 
 let is_project_root dir =
   match root with
