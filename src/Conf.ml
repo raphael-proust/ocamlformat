@@ -1539,7 +1539,7 @@ let parse_line config ~from s =
             not (String.is_empty s) )
       , from )
     with
-    | ([] | [""]), _ -> impossible "previous match"
+    | ([] | [""]), _ -> Error (`Malformed s)
     | [name; value], `File (filename, lnum) ->
         (* tolerate space separated [var value] to compatibility with older
            config file format *)
