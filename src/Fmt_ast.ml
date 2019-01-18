@@ -1516,12 +1516,22 @@ and fmt_expression c ?(box = true) ?epi ?eol ?parens ?(indent_wrap = 0) ?ext
       let xargs, xbody = sugar_fun c (sub_exp ~ctx retn_fun) in
       vbox 0
         (fmt_expression c (sub_exp ~ctx e0)
-        $  str (" "^monad_op^" ")
+        $  str (" " ^ monad_op ^ " ")
         $ ( fmt "fun "
           $ fmt_fun_args c xargs
           $ fmt " -> "
           $ break 0 0
           $ fmt_expression c xbody))
+  | Pexp_apply
+      ( {pexp_desc= Pexp_ident {txt= Lident monad_op}}
+      , [(Nolabel, e0); (Nolabel, ({pexp_desc= Pexp_function cs} as r))] )
+    when List.mem c.conf.monad_operators monad_op ~equal:String.equal ->
+      vbox 0
+        ( fmt_expression c (sub_exp ~ctx e0)
+        $ str (" " ^ monad_op ^ " ")
+        $ (fmt "function "
+          $ break 0 0
+          $ fmt_cases c (Exp r) cs) )
   | Pexp_apply
       ( {pexp_desc= Pexp_ident {txt= Lident "|>"; loc}; pexp_attributes= []}
       , [ (Nolabel, e0)
